@@ -13,7 +13,7 @@ import xml.etree.ElementTree as et
 from ctypes import Structure, POINTER, c_ubyte, c_double, c_int32, c_int64, c_uint32, c_int8, sizeof
 from ctypes import byref, create_string_buffer, cdll
 from ctypes import c_void_p, c_char_p
-from ctypes import c_int, c_long, c_longlong, c_double
+from ctypes import c_int, c_double
 
 from numpy import int64
 if sys.platform == "win32":
@@ -165,18 +165,18 @@ class RTMapsWrapper(Singleton):
 
     def get_current_time(self):
         func = self.lib.maps_get_current_time
-        func.argtypes = [POINTER(c_long)]
-        current_time = c_long()
+        func.argtypes = [POINTER(c_int64)]
+        current_time = c_int64()
         func(byref(current_time))
         return current_time.value
 
     def get_integer_property(self, name):
         func = self.lib.maps_get_integer_property
-        func.argtypes = [c_char_p, POINTER(c_long)]
+        func.argtypes = [c_char_p, POINTER(c_int64)]
         func.restype = c_int
 
         property_name = name.encode('utf-8')
-        property_value = c_long()
+        property_value = c_int64()
         if func(property_name, byref(property_value)) == 0:
             return property_value.value
         else:
@@ -243,12 +243,12 @@ class RTMapsWrapper(Singleton):
 
     def read_int32(self, name, wait_for_data):
         func = self.lib.maps_read_int32
-        func.argtypes = [c_char_p, c_int, POINTER(c_long), POINTER(c_longlong)]
+        func.argtypes = [c_char_p, c_int, POINTER(c_int32), POINTER(c_int64)]
         func.restype = c_int
         
         output_name = name.encode('utf-8')
-        output_value = c_long()
-        timestamp = c_longlong()
+        output_value = c_int32()
+        timestamp = c_int64()
         wait_for_data_ = c_int(int(wait_for_data))
 
         if func(output_name, wait_for_data_, byref(output_value), byref(timestamp)) == 0:
@@ -257,12 +257,12 @@ class RTMapsWrapper(Singleton):
             return None
     def read_int64(self, name, wait_for_data):
         func = self.lib.maps_read_int64
-        func.argtypes = [c_char_p, c_int, POINTER(c_longlong), POINTER(c_longlong)]
+        func.argtypes = [c_char_p, c_int, POINTER(c_int64), POINTER(c_int64)]
         func.restype = c_int
         
         output_name = name.encode('utf-8')
-        output_value = c_longlong()
-        timestamp = c_longlong()
+        output_value = c_int64()
+        timestamp = c_int64()
         wait_for_data_ = c_int(int(wait_for_data))
 
         if func(output_name, wait_for_data_, byref(output_value), byref(timestamp)) == 0:
@@ -273,12 +273,12 @@ class RTMapsWrapper(Singleton):
     
     def read_int32_timeout(self, name, timeout):
         func = self.lib.maps_read_int32_timeout
-        func.argtypes = [c_char_p, c_int64, POINTER(c_long), POINTER(c_longlong)]
+        func.argtypes = [c_char_p, c_int64, POINTER(c_int32), POINTER(c_int64)]
         func.restype = c_int
         
         output_name = name.encode('utf-8')
-        output_value = c_long()
-        timestamp = c_longlong()
+        output_value = c_int32()
+        timestamp = c_int64()
         timeout_ = c_int64(int64(timeout))
 
         result = func(output_name, timeout_, byref(output_value), byref(timestamp))
@@ -289,12 +289,12 @@ class RTMapsWrapper(Singleton):
 
     def read_int64_timeout(self, name, timeout):
         func = self.lib.maps_read_int64_timeout
-        func.argtypes = [c_char_p, c_int64, POINTER(c_long), POINTER(c_longlong)]
+        func.argtypes = [c_char_p, c_int64, POINTER(c_int64), POINTER(c_int64)]
         func.restype = c_int
         
         output_name = name.encode('utf-8')
-        output_value = c_long()
-        timestamp = c_longlong()
+        output_value = c_int64()
+        timestamp = c_int64()
         timeout_ = c_int64(int64(timeout))
 
         result = func(output_name, timeout_, byref(output_value), byref(timestamp))
@@ -305,12 +305,12 @@ class RTMapsWrapper(Singleton):
 
     def read_float64_timeout(self, name, timeout):
         func = self.lib.maps_read_float64_timeout
-        func.argtypes = [c_char_p, c_int64, POINTER(c_double), POINTER(c_longlong)]
+        func.argtypes = [c_char_p, c_int64, POINTER(c_double), POINTER(c_int64)]
         func.restype = c_int
         
         output_name = name.encode('utf-8')
         output_value = c_double()
-        timestamp = c_longlong()
+        timestamp = c_int64()
         timeout_ = c_int64(int64(timeout))
 
         result = func(output_name, timeout_, byref(output_value), byref(timestamp))
