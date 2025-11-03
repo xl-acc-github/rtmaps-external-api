@@ -468,12 +468,16 @@ class RTMapsAbstraction(RTMapsWrapper):
     
     It provides more convience features as it keeps track of all components added to the diagram. Furthermore, it checks if properties, inports or 
     outports do exists before executing the underlying commands. This class is not complete yet, feel free to add more features. 
+
+    Note:
+    * The boolean parameter x11 is only evaluated and effective under Linux. It is completely ignored under Windows.
     """
-    def __init__(self):
+    def __init__(self, x11: bool = False):
         self._enable_checks = True
         self._components = set()
         if sys.platform == "linux" or sys.platform == "linux2":
-            super(RTMapsAbstraction, self).__init__("--console", "--no-x11")
+            x11_option = "--x11" if x11 else "--no-x11"
+            super(RTMapsAbstraction, self).__init__("--console", x11_option)
         elif sys.platform == "win32":
             super(RTMapsAbstraction, self).__init__("--console")
 
