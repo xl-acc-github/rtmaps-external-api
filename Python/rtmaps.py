@@ -471,15 +471,16 @@ class RTMapsAbstraction(RTMapsWrapper):
 
     Note:
     * The boolean parameter x11 is only evaluated and effective under Linux. It is completely ignored under Windows.
+    * Any other arguments are passed as is to the initialization of the runtime.
     """
-    def __init__(self, x11: bool = False):
+    def __init__(self, *args, x11: bool = False):
         self._enable_checks = True
         self._components = set()
         if sys.platform == "linux" or sys.platform == "linux2":
             x11_option = "--x11" if x11 else "--no-x11"
-            super(RTMapsAbstraction, self).__init__("--console", x11_option)
+            super(RTMapsAbstraction, self).__init__("--console", x11_option, *args)
         elif sys.platform == "win32":
-            super(RTMapsAbstraction, self).__init__("--console")
+            super(RTMapsAbstraction, self).__init__("--console", *args)
 
     def add_component(self, component_type: str, component_id: str, xpos = None, ypos = None, zpos = 0):
         if self._enable_checks:
