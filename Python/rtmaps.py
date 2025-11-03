@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 import time
 import xml.etree.ElementTree as et
-from ctypes import Structure, POINTER, c_ubyte, c_double, c_int32, c_int64, c_uint32, c_int8, sizeof
+from ctypes import Structure, POINTER, c_ubyte, c_double, c_int32, c_int64, c_uint32, c_int8, sizeof, c_bool
 from ctypes import byref, create_string_buffer, cdll
 from ctypes import c_void_p, c_char_p
 from ctypes import c_int, c_double
@@ -169,6 +169,18 @@ class RTMapsWrapper(Singleton):
         current_time = c_int64()
         func(byref(current_time))
         return current_time.value
+
+    def get_bool_property(self, name):
+        func = self.lib.maps_get_bool_property
+        func.argtypes = [c_char_p, POINTER(c_bool)]
+        func.restype = c_int
+
+        property_name = name.encode('utf-8')
+        property_value = c_bool()
+        if func(property_name, byref(property_value)) == 0:
+            return property_value.value
+        else:
+            return None
 
     def get_integer_property(self, name):
         func = self.lib.maps_get_integer_property
@@ -618,6 +630,11 @@ class RTMapsAbstraction(RTMapsWrapper):
                     raise RTMapsException("{} is out of range for enum property {}. It must be [{},{})".format(value, property_name, 0, len(valid_enum_values)))
             else:
                 raise RTMapsException("Type {} is not allowed for enum properties".format(type(value)))
+
+    def get_bool_property(self, component_id, property_name):
+        self.check_component_availability(component_id)
+        self.check_property_availability(component_id, property_name)
+        return super(RTMapsAbstraction, self).get_bool_property("{}.{}".format(component_id, property_name))
 
     def get_integer_property(self, component_id, property_name):
         self.check_component_availability(component_id)
