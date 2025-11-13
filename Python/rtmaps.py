@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from pathlib import Path
+import re
 import time
 import xml.etree.ElementTree as et
 from ctypes import Structure, POINTER, c_ubyte, c_double, c_int32, c_int64, c_uint32, c_int8, sizeof
@@ -24,6 +25,7 @@ else:
 invalid_name_characters = ('.', "=", "<", ">", "(", ")", ",", ":", "|", "-", "\"", "/", "\\")
 valid_input_properties = ("subsampling", "readerType")
 valid_output_properties = ("periodic", "fifosize", "subsampling")
+load_diagram_command_regex = re.compile(r"loaddiagram\s+<<(?P<diagram>.*)>>")
 
 class RTMapsException(Exception):
     __module__ = Exception.__module__
@@ -477,13 +479,16 @@ class RTMapsAbstraction(RTMapsWrapper):
         elif sys.platform == "win32":
             super(RTMapsAbstraction, self).__init__("--console")
 
+    def _add_component_internal(self, component_type: str, component_id: str):
+        self._components.add(component_id)
+
     def add_component(self, component_type: str, component_id: str, xpos = None, ypos = None, zpos = 0):
         if self._enable_checks:
             if component_id in self._components:
                 raise RTMapsException("A component with name {} does already exist".format(component_id))
         command = "{} {}".format(component_type, component_id)
         self.parse(command)
-        self._components.add(component_id)
+        self._add_component_internal(component_type, component_id)
         if (xpos is not None) and (ypos is not None):
             command = "set_location {} {:d} {:d} {:d}".format(component_id, int(xpos), int(ypos), int(zpos))
             self.parse(command)
@@ -691,15 +696,21 @@ class RTMapsAbstraction(RTMapsWrapper):
             raise RTMapsException("{} is not a valid diagram file".format(diagram_path))
 
     def _load_rtm(self, diagram_path, reset=True):
-        if reset: self.reset()
+        if reset:
+            self.reset()
         with open(diagram_path) as file:
-            command = "loaddiagram <<{}>>".format(diagram_path)
-            self.parse(command)
             for line in file:
-                line_splitted = line.strip().split()
+                line = line.strip()
+                m = load_diagram_command_regex.match(line)
+                if m:
+                    # Load the diagram using our method to make sure we add all the components.
+                    self.load_diagram(m.group('diagram'), reset=False)
+                    continue
+                self.parse(line)
+                line_splitted = line.split()
                 # Check if line contains a component being added
                 if not any(char in line for char in invalid_name_characters) and len(line_splitted) == 2:
-                    self._components.add(line_splitted[1])
+                    self._add_component_internal(line_splitted[0], line_splitted[1])
 
     def _load_rtd(self, file_path):
         self.reset()
@@ -708,7 +719,7 @@ class RTMapsAbstraction(RTMapsWrapper):
         command = "loaddiagram <<{}>>".format(file_path)
         self.parse(command)
         for component_nodes in root.findall('int:Component', namespaces=namespaces):
-            self._components.add(component_nodes.attrib["InstanceName"])
+            self._add_component_internal(component_nodes.attrib["Model"], component_nodes.attrib["InstanceName"])
     
     def reset(self):
         self._components.clear()
