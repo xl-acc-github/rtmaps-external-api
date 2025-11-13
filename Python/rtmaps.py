@@ -576,7 +576,7 @@ class RTMapsAbstraction(RTMapsWrapper):
         command = "exportdiagramas <<{}>>".format(file_path)
         if overwrite:
             command += " overwrite"
-        self.parse(command, add_to_command_log=False)
+        self.parse(command)
 
     def check_action_availability(self, component_id, action):
         if self._enable_checks:
