@@ -12,10 +12,10 @@ import re
 import time
 import xml.etree.ElementTree as et
 from ctypes import (
-    Structure, POINTER,
-    sizeof,
+    Structure, CDLL, 
     c_double, c_int64, c_int32, c_uint32, c_int, c_int8, c_ubyte, c_bool, c_void_p, c_char_p,
-    CDLL,
+    POINTER, sizeof, byref, create_string_buffer,
+    cdll, 
 )
 
 from numpy import int64
